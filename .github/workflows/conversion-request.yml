@@ -96,6 +96,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Install jq 1.6
+        run: |
+          curl -Lo jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+          chmod +x jq
+          sudo mv jq /usr/local/bin
       - name: Install dependencies
         run: |
           sudo apt-get install -y moreutils zip
