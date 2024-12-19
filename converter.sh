@@ -1084,50 +1084,61 @@ do
       fi
 
       # generate our rp attachable definition
-      mkdir -p ./target/rp/attachables/${namespace}/${model_path}
-      jq -c -n --arg generated "${generated}" --arg atlas_index "${atlas_index}" --arg attachable_material "${attachable_material}" --arg v_main "v.main_hand = c.item_slot == 'main_hand';" --arg v_off "v.off_hand = c.item_slot == 'off_hand';" --arg v_head "v.head = c.item_slot == 'head';" --arg path_hash "${path_hash}" --arg namespace "${namespace}" --arg model_path "${model_path}" --arg model_name "${model_name}" --arg geometry "${geometry}" '
-      def tobool: if .=="true" then true elif .=="false" then false else null end;
-      {
-        "format_version": "1.10.0",
-        "minecraft:attachable": {
-          "description": {
-            "identifier": ("geyser_custom:" + $path_hash),
-            "materials": {
-              "default": $attachable_material,
-              "enchanted": $attachable_material
-            },
-            "textures": {
-              "default": (if ($generated | tobool) == true then ("textures/" + $namespace + "/" + $model_path + "/" + $model_name) else ("textures/" + $atlas_index) end),
-              "enchanted": "textures/misc/enchanted_item_glint"
-            },
-            "geometry": {
-              "default": ("geometry.geyser_custom." + $geometry)
-            },
-            "scripts": {
-              "pre_animation": [$v_main, $v_off, $v_head],
-              "animate": [
-                {"thirdperson_main_hand": "v.main_hand && !c.is_first_person"},
-                {"thirdperson_off_hand": "v.off_hand && !c.is_first_person"},
-                {"thirdperson_head": "v.head && !c.is_first_person"},
-                {"firstperson_main_hand": "v.main_hand && c.is_first_person"},
-                {"firstperson_off_hand": "v.off_hand && c.is_first_person"},
-                {"firstperson_head": "c.is_first_person && v.head"}
-              ]
-            },
-            "animations": {
-              "thirdperson_main_hand": ("animation.geyser_custom." + $geometry + ".thirdperson_main_hand"),
-              "thirdperson_off_hand": ("animation.geyser_custom." + $geometry + ".thirdperson_off_hand"),
-              "thirdperson_head": ("animation.geyser_custom." + $geometry + ".head"),
-              "firstperson_main_hand": ("animation.geyser_custom." + $geometry + ".firstperson_main_hand"),
-              "firstperson_off_hand": ("animation.geyser_custom." + $geometry + ".firstperson_off_hand"),
-              "firstperson_head": "animation.geyser_custom.disable"
-            },
-            "render_controllers": [ "controller.render.item_default" ]
-          }
-        }
-      }
+mkdir -p ./target/rp/attachables/${namespace}/${model_path}
+jq -c -n --arg generated "${generated}" \
+  --arg atlas_index "${atlas_index}" \
+  --arg attachable_material "${attachable_material}" \
+  --arg v_main "v.main_hand = c.item_slot == 'main_hand';" \
+  --arg v_off "v.off_hand = c.item_slot == 'off_hand';" \
+  --arg v_head "v.head = c.item_slot == 'head';" \
+  --arg path_hash "${path_hash}" \
+  --arg namespace "${namespace}" \
+  --arg model_path "${model_path}" \
+  --arg model_name "${model_name}" \
+  --arg geometry "${geometry}" '
+def tobool: if .=="true" then true elif .=="false" then false else null end;
+def clean_path(path): path | gsub("//"; "/");
 
-      ' | sponge ./target/rp/attachables/${namespace}/${model_path}/${model_name}.${path_hash}.attachable.json
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": ("geyser_custom:" + $path_hash),
+      "materials": {
+        "default": $attachable_material,
+        "enchanted": $attachable_material
+      },
+      "textures": {
+        "default": clean_path(if ($generated | tobool) == true then ("textures/" + $namespace + "/" + $model_path + "/" + $model_name) else ("textures/" + $atlas_index) end),
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": ("geometry.geyser_custom." + $geometry)
+      },
+      "scripts": {
+        "pre_animation": [$v_main, $v_off, $v_head],
+        "animate": [
+          {"thirdperson_main_hand": "v.main_hand && !c.is_first_person"},
+          {"thirdperson_off_hand": "v.off_hand && !c.is_first_person"},
+          {"thirdperson_head": "v.head && !c.is_first_person"},
+          {"firstperson_main_hand": "v.main_hand && c.is_first_person"},
+          {"firstperson_off_hand": "v.off_hand && c.is_first_person"},
+          {"firstperson_head": "c.is_first_person && v.head"}
+        ]
+      },
+      "animations": {
+        "thirdperson_main_hand": ("animation.geyser_custom." + $geometry + ".thirdperson_main_hand"),
+        "thirdperson_off_hand": ("animation.geyser_custom." + $geometry + ".thirdperson_off_hand"),
+        "thirdperson_head": ("animation.geyser_custom." + $geometry + ".head"),
+        "firstperson_main_hand": ("animation.geyser_custom." + $geometry + ".firstperson_main_hand"),
+        "firstperson_off_hand": ("animation.geyser_custom." + $geometry + ".firstperson_off_hand"),
+        "firstperson_head": "animation.geyser_custom.disable"
+      },
+      "render_controllers": [ "controller.render.item_default" ]
+    }
+  }
+}
+' | sponge ./target/rp/attachables/${namespace}/${model_path}/${model_name}.${path_hash}.attachable.json
 
       # progress
       echo >> scratch_files/count.csv
